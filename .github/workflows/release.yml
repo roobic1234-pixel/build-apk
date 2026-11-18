@@ -9,11 +9,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # این بخش مهم‌ترین تغییره: پسوردها رو برای کل محیط کار تعریف کردیم
+    # پسوردها را با پیشوند ORG_GRADLE_PROJECT_ تعریف می‌کنیم
     env:
-      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      ORG_GRADLE_PROJECT_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      ORG_GRADLE_PROJECT_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      ORG_GRADLE_PROJECT_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
     steps:
     - name: Checkout Code
@@ -22,10 +22,19 @@ jobs:
     - name: Unzip Project
       run: unzip daneshino.zip
 
+    # اصلاح نام کی‌استور
     - name: Fix Keystore Name
       run: |
         find . -name "build.gradle.kts" -exec sed -i 's/my-upload-key.jks/daneshino-release.jks/g' {} +
 
+    # اصلاح نحوه خواندن پسوردها در فایل build.gradle.kts
+    - name: Fix Gradle Signing Config
+      run: |
+        find . -name "build.gradle.kts" -exec sed -i 's/System.getenv("KEYSTORE_PASSWORD")/project.property("KEYSTORE_PASSWORD") as String/g' {} +
+        find . -name "build.gradle.kts" -exec sed -i 's/System.getenv("KEY_ALIAS")/project.property("KEY_ALIAS") as String/g' {} +
+        find . -name "build.gradle.kts" -exec sed -i 's/System.getenv("KEY_PASSWORD")/project.property("KEY_PASSWORD") as String/g' {} +
+
+    # حذف پلاگین foojay
     - name: Remove foojay plugin from settings
       run: |
         find . -name "settings.gradle.kts" -exec sed -i '/foojay-resolver-convention/d' {} +
