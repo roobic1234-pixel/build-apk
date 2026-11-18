@@ -26,20 +26,30 @@ jobs:
       env:
         KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
       run: |
-        echo "$KEYSTORE_BASE64" | base64 -d > daneshino-release.jks
+        # پیدا کردن مسیر اصلی پروژه و ساخت کی‌استور در همان مسیر
+        GRADLE_DIR=$(dirname $(find . -name "gradlew" | head -n 1))
+        echo "$KEYSTORE_BASE64" | base64 -d > "$GRADLE_DIR/daneshino-release.jks"
 
     - name: Grant execute permission for gradlew
-      run: chmod +x ./gradlew
+      run: |
+        # پیدا کردن پوشه اصلی و دادن دسترسی اجرا
+        GRADLE_DIR=$(dirname $(find . -name "gradlew" | head -n 1))
+        chmod +x "$GRADLE_DIR/gradlew"
 
     - name: Build Release APK
       env:
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      run: ./gradlew assembleRelease
+      run: |
+        # رفتن به پوشه اصلی و شروع بیلد
+        GRADLE_DIR=$(dirname $(find . -name "gradlew" | head -n 1))
+        cd "$GRADLE_DIR"
+        ./gradlew assembleRelease
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: Release-APK
-        path: app/build/outputs/apk/release/*.apk
+        # این مسیر همه پوشه‌ها رو میگرده تا فایل APK رو پیدا کنه
+        path: '**/build/outputs/apk/release/*.apk'
