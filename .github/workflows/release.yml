@@ -9,6 +9,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    # این بخش مهم‌ترین تغییره: پسوردها رو برای کل محیط کار تعریف کردیم
+    env:
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
@@ -20,7 +26,6 @@ jobs:
       run: |
         find . -name "build.gradle.kts" -exec sed -i 's/my-upload-key.jks/daneshino-release.jks/g' {} +
 
-    # مرحله جدید: حذف پلاگین foojay از فایل settings.gradle.kts
     - name: Remove foojay plugin from settings
       run: |
         find . -name "settings.gradle.kts" -exec sed -i '/foojay-resolver-convention/d' {} +
@@ -43,10 +48,6 @@ jobs:
         echo "$KEYSTORE_BASE64" | base64 -d > "$PROJECT_DIR/daneshino-release.jks"
 
     - name: Build Release APK
-      env:
-        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       run: |
         cd "$PROJECT_DIR"
         if [ -f "gradlew" ]; then
