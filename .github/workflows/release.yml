@@ -16,10 +16,14 @@ jobs:
     - name: Unzip Project
       run: unzip daneshino.zip
 
-    # این مرحله جدید اضافه شده تا اسم فایل کلید رو توی کدهای پروژه اصلاح کنه
     - name: Fix Keystore Name
       run: |
         find . -name "build.gradle.kts" -exec sed -i 's/my-upload-key.jks/daneshino-release.jks/g' {} +
+
+    # مرحله جدید: حذف پلاگین foojay از فایل settings.gradle.kts
+    - name: Remove foojay plugin from settings
+      run: |
+        find . -name "settings.gradle.kts" -exec sed -i '/foojay-resolver-convention/d' {} +
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
